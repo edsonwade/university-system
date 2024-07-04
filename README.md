@@ -1,4 +1,4 @@
-# Enhanced Student Management System
+Student Management System.
 
 ## Description
 A system designed to efficiently manage student records, incorporating CRUD operations and advanced search functionalities. It also manages degrees, courses, teachers, appointments, and teacher availabilities.
