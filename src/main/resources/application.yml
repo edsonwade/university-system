@@ -1,0 +1,7 @@
+spring:
+  application:
+  name: student-management
+
+
+server:
+  port: 8081
