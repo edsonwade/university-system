@@ -1,4 +1,4 @@
-Student Management System.
+# Enhanced Student Management System
 
 ## Description
 A system designed to efficiently manage student records, incorporating CRUD operations and advanced search functionalities. It also manages degrees, courses, teachers, appointments, and teacher availabilities.
@@ -8,39 +8,39 @@ To practice CRUD operations, database integration, and building a console applic
 
 ## Features and Functionalities
 
-### Student Management
+### 🎓 Student Management
 - Add a new student record
 - Update a student record
 - Delete a student record
 - Search for a student by name or ID
 - List all students
 
-### Degree Management
+### 📜 Degree Management
 - Add a new degree
 - Update a degree
 - Delete a degree
 - List all degrees
 
-### Course Management
+### 📘 Course Management
 - Add a new course
 - Update a course
 - Delete a course
 - List all courses
 - Assign courses to degrees
 
-### Teacher Management
+### 👨‍🏫 Teacher Management
 - Add a new teacher
 - Update a teacher
 - Delete a teacher
 - List all teachers
 
-### Appointment Management
+### 📅 Appointment Management
 - Schedule an appointment
 - Update an appointment
 - Cancel an appointment
 - List all appointments
 
-### Availability Management
+### ⏰ Availability Management
 - Add availability for a teacher
 - Update availability
 - Delete availability
@@ -48,27 +48,27 @@ To practice CRUD operations, database integration, and building a console applic
 
 ## Entities and Relationships
 
-### Student
+### 📝 Student
 - **Attributes:** id, name, age, gender, enrollment_date, degree_id
 - **Relationships:** Belongs to Degree
 
-### Degree
+### 🎓 Degree
 - **Attributes:** id, name, description
 - **Relationships:** Has many Students, has many Courses
 
-### Course
+### 📘 Course
 - **Attributes:** id, name, description, degree_id
 - **Relationships:** Belongs to Degree, has many Teachers
 
-### Teacher
+### 👨‍🏫 Teacher
 - **Attributes:** id, name, expertise, email
 - **Relationships:** Teaches many Courses, has many Availabilities
 
-### Appointment
+### 📅 Appointment
 - **Attributes:** id, student_id, teacher_id, date_time, description
 - **Relationships:** Belongs to Student, belongs to Teacher
 
-### Availability
+### ⏰ Availability
 - **Attributes:** id, teacher_id, day_of_week, start_time, end_time
 - **Relationships:** Belongs to Teacher
 
@@ -97,6 +97,16 @@ Sequence diagrams should demonstrate the flow of interactions between entities a
 6. Write unit and integration tests.
 7. Create Dockerfile and docker-compose configuration.
 
+
 ## Database Choice and Schema
 - **Database:** PostgreSQL
 - A well-defined schema should be designed to accommodate the entities and their relationships effectively.
+
+## Contribution
+Please read [CONTRIBUTING.md](link-to-contributing-file) for details on how to contribute to this project.
+
+## License
+This project is licensed under the [MIT License](https://opensource.org/licenses/MIT).
+
+
+
