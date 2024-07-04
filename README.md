@@ -1,6 +1,6 @@
-# Enhanced Student Management System
+#Student Management System 🚀
 
-## Description
+## Description 🚀
 A system designed to efficiently manage student records, incorporating CRUD operations and advanced search functionalities. It also manages degrees, courses, teachers, appointments, and teacher availabilities.
 
 ## Objective
@@ -103,7 +103,7 @@ Sequence diagrams should demonstrate the flow of interactions between entities a
 - A well-defined schema should be designed to accommodate the entities and their relationships effectively.
 
 ## Contribution
-Please read [CONTRIBUTING.md](link-to-contributing-file) for details on how to contribute to this project.
+Please read [CONTRIBUTING.md](link-to-contributing-file) for details on how to contribute to this project.😊🚀
 
 ## License
 This project is licensed under the [MIT License](https://opensource.org/licenses/MIT).
