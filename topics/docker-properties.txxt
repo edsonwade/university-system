@@ -1,0 +1,39 @@
+spring:
+  datasource:
+    url: ${DATABASE_URL}
+    username: ${POSTGRES_USERNAME}
+    password: ${POSTGRES_PASSWORD}
+    driverClassName: ${SPRING_DATASOURCE_URL}
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: ${HIBERNATE_DDL_AUTO}
+    properties:
+      hibernate:
+        format_sql: true
+  flyway:
+    baselineOnMigrate: true
+    fail-on-missing-locations: true
+    locations: classpath:db/migration
+    schemas: public
+    enabled: true
+
+server:
+  error:
+    include-message: always
+  port: ${SERVER_PORT}
+
+flyway:
+  url: ${DATABASE_URL}
+  user: ${POSTGRES_USER}
+  password: ${POSTGRES_PASSWORD}
+
+New docker cmd
+docker scout quickview
+
+
+What's Next?
+  View vulnerabilities → docker scout cves local://student-management-system:latest
+  View base image update recommendations → docker scout recommendations local://student-management-system:latest
+  Include policy results in your quickview by supplying an organization → docker scout quickview local://student-management-system:latest --org <organization>
+

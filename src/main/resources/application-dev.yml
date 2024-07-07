@@ -1,4 +1,3 @@
-#file: noinspection SpringBootApplicationYaml
 spring:
   application:
     name: student-management
@@ -17,6 +16,8 @@ spring:
       format_sql: true
       show-sql: true
     database: postgresql
+    open-in-view: true
+
 
 
 
