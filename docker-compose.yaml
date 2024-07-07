@@ -7,7 +7,6 @@ services:
     depends_on:
       - postgres
     environment:
-      SPRING_DATASOURCE_URL: org.postgresql.Driver
       DATABASE_URL: jdbc:postgresql://postgres:5432/student_management_db
       POSTGRES_USERNAME: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
