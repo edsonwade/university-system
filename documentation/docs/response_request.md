@@ -44,6 +44,54 @@ Cache-Control: no-cache
 Content-Length: 1024
 ```
 
+## Request and Response Headers
+
+### Request Headers
+- **Content-Type**: Specifies the media type of the request body (e.g., `application/json`).
+- **Accept**: Specifies the media types that are acceptable for the response (e.g., `application/json`).
+- **Authorization**: Contains credentials for authenticating the client with the server.
+- **Cache-Control**: Directs caching mechanisms on whether and how to cache the response.
+- **Connection**: Specifies options for the current connection (e.g., `keep-alive`).
+
+### Response Headers
+- **Content-Type**: Specifies the media type of the response body (e.g., `application/json`).
+- **Location**: Specifies a URI to redirect the client after a successful resource creation.
+- **ETag**: A unique identifier for the version of the resource.
+- **Cache-Control**: Directs how caching mechanisms should behave for the response.
+- **Server**: Provides information about the server software handling the request.
+- **Content-Length**: Indicates the size of the response body in bytes.
+
+### Example
+
+#### Request Example
+```http
+POST /api/customers/create HTTP/1.1
+Host: localhost:8080
+Content-Type: application/json
+Accept: application/json
+
+{
+  "name": "John Doe",
+  "email": "john.doe@example.com",
+  "address": "123 Main St"
+}
+
+
+## Example Response Header:
+```http
+HTTP/1.1 201 Created
+Content-Type: application/json
+Location: /api/customers/1
+ETag: "1"
+Cache-Control: no-cache
+
+{
+"customerId": 1,
+"name": "John Doe",
+"email": "john.doe@example.com",
+"address": "123 Main St"
+}
+```
 ## Usage in APIs
 
 - **Validation**: Validate headers in API endpoints to ensure they meet expected values and formats.

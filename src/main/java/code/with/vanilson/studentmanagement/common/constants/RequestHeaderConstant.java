@@ -7,17 +7,15 @@ package code.with.vanilson.studentmanagement.common.constants;
  * @version 1.0
  * @since 2024-07-05
  */
-
 public class RequestHeaderConstant {
-    // Accept header
+
+    // Accept headers
     public static final String ACCEPT = "Accept";
     public static final String ACCEPT_CHARSET = "Accept-Charset";
     public static final String ACCEPT_ENCODING = "Accept-Encoding";
     public static final String ACCEPT_LANGUAGE = "Accept-Language";
-    public static final String ACCEPT_RANGES = "Accept-Ranges";
-    public static final String ACCEPT_RANGES_CHARSET = "Accept-Ranges-Charset";
-    public static final String ACCEPT_RANGES_ENCODING = "Accept-Ranges-Encoding";
-    public static final String ACCEPT_RANGES_LANGUAGE = "Accept-Ranges-Language";
+
+    // Access Control headers
     public static final String ACCESS_CONTROL_ALLOW_ORIGIN = "Access-Control-Allow-Origin";
     public static final String ACCESS_CONTROL_ALLOW_METHODS = "Access-Control-Allow-Methods";
     public static final String ACCESS_CONTROL_ALLOW_HEADERS = "Access-Control-Allow-Headers";
@@ -55,6 +53,7 @@ public class RequestHeaderConstant {
     public static final String SET_COOKIE_PATH = "Set-Cookie-Path";
     public static final String SET_COOKIE_SECURE = "Set-Cookie-Secure";
     public static final String SET_COOKIE_DOMAIN = "Set-Cookie-Domain";
+
     // Content type values
     public static final String CONTENT_TYPE_JSON = "application/json";
     public static final String CONTENT_TYPE_XML = "application/xml";
