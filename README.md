@@ -245,10 +245,10 @@ Accept: application/json
 }
 ```
 ### Resources for Further Learning
-1.[Spring Boot Documentation](https://docs.spring.io/spring-boot/index.html)
-2.[HTTP Specification](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods)
-3.[API Design Best Practices](https://restfulapi.net/)
-4.[OpenAPI Specification:](https://swagger.io/specification/)
+1. [Spring Boot Documentation](https://docs.spring.io/spring-boot/index.html)
+2. [HTTP Specification](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods)
+3. [API Design Best Practices](https://restfulapi.net/)
+4. [OpenAPI Specification:](https://swagger.io/specification/)
 
 ## Contribution
 Please read [CONTRIBUTING.md](link-to-contributing-file) for details on how to contribute to this project.🤝
