@@ -1,7 +1,7 @@
 # my global configuration
 global:
-  scrape_interval: 15s     #Set the scrape interval to every 15 seconds. Default is every 1 minute.
-  evaluation_interval: 15s #Evaluate rules every 15 seconds. the Defualt is every 1 minute.
+  scrape_interval: 5s     #Set the scrape interval to every 15 seconds. Default is every 1 minute.
+  evaluation_interval: 5s #Evaluate rules every 15 seconds. the Default is every 1 minute.
 
 
 scrape_configs:
