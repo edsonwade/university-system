@@ -27,7 +27,7 @@ public class AuthService {
                                 .password(passwordEncoder.encode(request.getPassword()))
                                 .role(request.getRole() != null ? request.getRole() : Role.USER)
                                 .build();
-                repository.save(user);
+                user = repository.save(user);
 
                 // Send welcome email
                 emailService.sendSimpleMessage(user.getEmail(), "Welcome to University System",
