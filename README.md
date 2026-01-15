@@ -1,257 +1,504 @@
-#Student Management System 🚀
+# University SaaS Blueprint
 
-## Description  📚
-A system designed to efficiently manage student records, incorporating CRUD operations and advanced search functionalities. It also manages degrees, courses, teachers, appointments, and teacher availabilities.
+A comprehensive, production-ready microservices-based University Management System built with Spring Boot, Spring Cloud, and Domain-Driven Design (DDD) principles.
 
-## Objective 🎯
-To practice CRUD operations, database integration, and building a console application with sophisticated search features, while handling complex relationships between entities.
+## 🏗️ Architecture Overview
 
-## Features and Functionalities
+This project implements a complete microservices architecture with:
 
-### 🎓 Student Management
-- Add a new student record
-- Update a student record
-- Delete a student record
-- Search for a student by name or ID
-- List all students
+- **9 Microservices** (User, Course, Grades, Billing, Library, Notification + Infrastructure)
+- **Service Discovery** (Eureka)
+- **API Gateway** (Spring Cloud Gateway)
+- **Event-Driven Architecture** (Kafka)
+- **Caching** (Redis)
+- **Database Per Service** (PostgreSQL)
 
-### 📜 Degree Management
-- Add a new degree
-- Update a degree
-- Delete a degree
-- List all degrees
+## 📋 Table of Contents
 
-### 📘 Course Management
-- Add a new course
-- Update a course
-- Delete a course
-- List all courses
-- Assign courses to degrees
+- [Features](#features)
+- [Technology Stack](#technology-stack)
+- [Architecture](#architecture)
+- [Getting Started](#getting-started)
+- [API Documentation](#api-documentation)
+- [Deployment](#deployment)
+- [Monitoring](#monitoring)
 
-### 👨‍🏫 Teacher Management
-- Add a new teacher
-- Update a teacher
-- Delete a teacher
-- List all teachers
+## Features  ✨
 
-### 📅 Appointment Management
-- Schedule an appointment
-- Update an appointment
-- Cancel an appointment
-- List all appointments
+### Core Services
 
-### ⏰ Availability Management
-- Add availability for a teacher
-- Update availability
-- Delete availability
-- List all availabilities
+#### 1. **User Management Service** (Port 8081)
 
-## Entities and Relationships
+- User registration and authentication
+- JWT-based security
+- Role-based access control
+- Password encryption (BCrypt)
 
-### 📝 Student
-- **Attributes:** id, name, age, gender, enrollment_date, degree_id
-- **Relationships:** Belongs to Degree
+#### 2. **Course & Enrollment Service** (Port 8082)
 
-### 🎓 Degree
-- **Attributes:** id, name, description
-- **Relationships:** Has many Students, has many Courses
+- Course management (CRUD)
+- Student enrollment
+- Department-based filtering
+- Instructor assignment
 
-### 📘 Course
-- **Attributes:** id, name, description, degree_id
-- **Relationships:** Belongs to Degree, has many Teachers
+#### 3. **Grades Service** (Port 8083)
 
-### 👨‍🏫 Teacher
-- **Attributes:** id, name, expertise, email
-- **Relationships:** Teaches many Courses, has many Availabilities
+- Grade management for enrolled courses
+- Multiple grade types (Assignment, Quiz, Midterm, Final, Project)
+- Average grade calculation
+- Grade history tracking
 
-### 📅 Appointment
-- **Attributes:** id, student_id, teacher_id, date_time, description
-- **Relationships:** Belongs to Student, belongs to Teacher
+#### 4. **Billing & Payments Service** (Port 8084)
 
-### ⏰ Availability
-- **Attributes:** id, teacher_id, day_of_week, start_time, end_time
-- **Relationships:** Belongs to Teacher
+- Invoice generation
+- Payment processing
+- Multiple payment methods
+- Payment history
+- Invoice status tracking
 
-## Class Diagram 📊
-A comprehensive class diagram illustrating the relationships and attributes of each entity should be created.
+#### 5. **Library Service** (Port 8085)
 
-## Sequence Diagram 🔄
-Sequence diagrams should demonstrate the flow of interactions between entities and services for key functionalities such as adding a student or scheduling an appointment.
+- Book catalog management
+- Book borrowing and returns
+- Search by title, author, category
+- Availability tracking
 
-## Functional Requirements 📝
-- The application should support CRUD operations for all entities.
-- The application should provide search functionalities for students, teachers, and appointments.
-- The application should list all entities and their relationships.
+#### 6. **Notification Service** (Port 8086)
 
-## Non-Functional Requirements 🚀
-- **Performance:** The application should respond within 200ms for any request.
-- **Security:** The application should protect user data and ensure secure access.
-- **Maintainability:** The application should be easy to maintain and extend with new features.
+- Email notifications
+- SMS notifications (framework ready)
+- Event-driven notifications via Kafka
+- Notification history
 
-## Order of Implementation 🛠️
-1. Set up the Java project.
-2. Implement entities and repositories for Student, Degree, Course, Teacher, Appointment, and Availability.
-3. Implement the service layer for business logic.
-4. Develop a console-based user interface.
-5. Integrate the application with the PostgreSQL database.
-6. Write unit and integration tests.
-7. Create Dockerfile and docker-compose configuration.
+### Infrastructure Services
 
+#### 7. **Service Discovery** (Port 8761)
 
-## Database Choice and Schema
-- **Database:** PostgreSQL
-- A well-defined schema should be designed to accommodate the entities and their relationships effectively.
+- Eureka Server for service registration
+- Dynamic service discovery
+- Health monitoring
 
-## Testing 🧪
+#### 8. **API Gateway** (Port 8080)
 
-- Unit tests and integration tests ensure functionality and reliability.
-- Use [testing framework] to run tests and verify system behavior.
+- Single entry point for all services
+- Request routing
+- Load balancing
 
-## Deployment 🚀
+## 🛠️ Technology Stack
 
-- Deployment strategies (e.g., Docker, Kubernetes) for production environments.
-- Configuration management and scaling considerations.
+### Core Technologies
 
-## Security 🔒
+- **Java**: 17+
+- **Spring Boot**: 3.2.3
+- **Spring Cloud**: 2023.0.0
+- **Maven**: 3.8+
 
-- Security measures implemented (e.g., HTTPS, input validation).
-- Data protection and user authentication strategies.
+### Frameworks & Libraries
 
-## Performance ⚡
+- **Spring Data JPA**: Database access
+- **Spring Security**: Authentication & Authorization
+- **Spring Cloud Gateway**: API Gateway
+- **Spring Cloud Netflix Eureka**: Service Discovery
+- **Spring Kafka**: Event-driven messaging
+- **Spring Mail**: Email notifications
+- **JWT (jjwt)**: Token-based authentication
+- **Lombok**: Reduce boilerplate code
+- **PostgreSQL**: Relational database
+- **Redis**: Caching layer
 
-- Performance benchmarks and considerations.
-- Optimization techniques implemented (e.g., caching, database indexing).
+### Infrastructure
 
-## Error Handling
+- **Docker**: Containerization
+- **Docker Compose**: Multi-container orchestration
+- **Kafka + Zookeeper**: Message broker
+- **Redis**: In-memory cache
 
-The API follows standard HTTP status codes and includes error responses with detailed error messages in JSON format.
+## 🏛️ Architecture
 
-### HTTP Status Codes
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    API Gateway (8080)                        │
+│              Single Entry Point for All Clients              │
+└────────────────────┬────────────────────────────────────────┘
+                     │
+        ┌────────────┴────────────┐
+        │                         │
+┌───────▼────────┐       ┌───────▼────────┐
+│ Service        │       │  Microservices │
+│ Discovery      │◄──────┤  Register &    │
+│ (Eureka:8761)  │       │  Discover      │
+└────────────────┘       └────────────────┘
+                                │
+        ┌───────────────────────┼───────────────────────┐
+        │                       │                       │
+┌───────▼────────┐  ┌──────────▼─────────┐  ┌─────────▼────────┐
+│ User Service   │  │ Course Service     │  │ Grades Service   │
+│ (8081)         │  │ (8082)             │  │ (8083)           │
+│ + user_db      │  │ + course_db        │  │ + grades_db      │
+└────────┬───────┘  └────────┬───────────┘  └──────────┬───────┘
+         │                   │                          │
+         │         ┌─────────▼──────────┐              │
+         │         │   Kafka Broker     │              │
+         └────────►│   Event Bus        │◄─────────────┘
+                   └─────────┬──────────┘
+                             │
+         ┌───────────────────┼───────────────────────┐
+         │                   │                       │
+┌────────▼───────┐  ┌────────▼──────────┐  ┌────────▼────────┐
+│ Billing Svc    │  │ Library Service   │  │ Notification    │
+│ (8084)         │  │ (8085)            │  │ Service (8086)  │
+│ + billing_db   │  │ + library_db      │  │ + notif_db      │
+└────────────────┘  └───────────────────┘  └─────────────────┘
+         │                   │                       │
+         └───────────────────┴───────────────────────┘
+                             │
+                   ┌─────────▼──────────┐
+                   │   Redis Cache      │
+                   │   (6379)           │
+                   └────────────────────┘
+```
 
-- `200 OK`: Successful request
-- `400 Bad Request`: Invalid request data
-- `401 Unauthorized`: Unauthorized request (not used currently)
-- `404 Not Found`: Resource not found
-- `500 Internal Server Error`: Server error
+## 🚀 Getting Started
 
-## Endpoints 🚀
+### Prerequisites
 
-### REST API
+- **Java 17+** installed
+- **Maven 3.8+** installed
+- **Docker** and **Docker Compose** installed
+- **Git** installed
 
-The REST API endpoints allow interaction with the application:
+### Clone the Repository
 
-- Detailed documentation of all endpoints, request formats, response formats, and examples.
+```bash
+git clone <repository-url>
+cd university-saas
+```
 
-### Students
+### Build the Project
 
-#### Get All Students
+```bash
+mvn clean install -DskipTests
+```
 
-- **URL**: `/students`
-- **Method**: `GET`
-- **Description**: Retrieve all students.
-- **Request Parameters**: None
-- **Response**: List of student objects.
+### Run with Docker Compose
 
-#### Get Student by ID
+```bash
+docker-compose up --build
+```
 
-- **URL**: `/students/{studentId}`
-- **Method**: `GET`
-- **Description**: Retrieve a student by ID.
-- **Request Parameters**: `studentId` (Path parameter)
-- **Response**: Student object with HATEOAS links to related resources.
+This will start:
 
-#### Create Student
+- All 9 microservices
+- 6 PostgreSQL databases
+- Kafka + Zookeeper
+- Redis
+- Eureka Server
+- API Gateway
 
-- **URL**: `/students`
-- **Method**: `POST`
-- **Description**: Create a new student.
-- **Request Body**: JSON object with student details (name, age, gender, enrollment date).
-- **Response**: Success message with student ID and HATEOAS links.
+### Access the Services
 
-#### Update Student
+| Service              | URL                   | Description      |
+| -------------------- | --------------------- | ---------------- |
+| Eureka Dashboard     | http://localhost:8761 | Service registry |
+| API Gateway          | http://localhost:8080 | Main entry point |
+| User Service         | http://localhost:8081 | Direct access    |
+| Course Service       | http://localhost:8082 | Direct access    |
+| Grades Service       | http://localhost:8083 | Direct access    |
+| Billing Service      | http://localhost:8084 | Direct access    |
+| Library Service      | http://localhost:8085 | Direct access    |
+| Notification Service | http://localhost:8086 | Direct access    |
 
-- **URL**: `/students/{studentId}`
-- **Method**: `PUT`
-- **Description**: Update an existing student.
-- **Request Parameters**: `studentId` (Path parameter)
-- **Request Body**: JSON object with updated student details.
-- **Response**: Success message with updated student details and HATEOAS links.
+## 📚 API Documentation
 
-#### Delete Student
+### User Service APIs
 
-- **URL**: `/students/{studentId}`
-- **Method**: `DELETE`
-- **Description**: Delete a student by ID.
-- **Request Parameters**: `studentId` (Path parameter)
-- **Response**: Success message.
-
-### Appointments
-
-#### Get Appointments for Student
-
-- **URL**: `/students/{studentId}/appointments`
-- **Method**: `GET`
-- **Description**: Retrieve appointments for a specific student.
-- **Request Parameters**: `studentId` (Path parameter)
-- **Response**: List of appointment objects with HATEOAS links to related resources.
-
-#### Get Appointments for Teacher
-
-- **URL**: `/teachers/{teacherId}/appointments`
-- **Method**: `GET`
-- **Description**: Retrieve appointments for a specific teacher.
-- **Request Parameters**: `teacherId` (Path parameter)
-- **Response**: List of appointment objects with HATEOAS links to related resources.
-
-### HATEOAS Links
-
-- HATEOAS links are included in responses to navigate between related resources.
-- Example links: `self`, `appointments`, etc.
-
-## Example Usage
-
-### Create Student Example
+#### Register User
 
 ```http
-POST /api/v1/students HTTP/1.1
-Host: localhost:8080
+POST /api/users
 Content-Type: application/json
-Accept: application/json
 
 {
-  "name": "John Doe",
-  "age": 22,
-  "gender": "Male",
-  "enrollmentDate": "2024-07-10"
+  "firstName": "John",
+  "lastName": "Doe",
+  "email": "john.doe@university.edu",
+  "password": "SecurePass123"
 }
 ```
-### HTTP Response
 
-**HTTP/1.1 201 Created**
-**Content-Type:** application/json
+#### Login
 
-```json
+```http
+POST /api/auth/login
+Content-Type: application/json
+
 {
-  "message": "Student created successfully",
-  "studentId": "12345",
-  "_links": {
-    "self": {
-      "href": "http://localhost:8080/api/v1/students/12345"
-    },
-    "appointments": {
-      "href": "http://localhost:8080/api/v1/students/12345/appointments"
-    }
+  "email": "john.doe@university.edu",
+  "password": "SecurePass123"
+}
+
+Response:
+{
+  "success": true,
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "user": { ... }
   }
 }
 ```
-### Resources for Further Learning
-[Spring Boot Documentation](https://docs.spring.io/spring-boot/index.html)
-[HTTP Specification](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods)
-[API Design Best Practices](https://restfulapi.net/)
-[OpenAPI Specification:](https://swagger.io/specification/)
 
-## Contribution
-Please read [CONTRIBUTING.md](link-to-contributing-file) for details on how to contribute to this project.🤝
+### Course Service APIs
+
+#### Create Course
+
+```http
+POST /api/courses
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "title": "Introduction to Computer Science",
+  "description": "Fundamentals of programming",
+  "credits": 3,
+  "department": "Computer Science",
+  "instructorId": 1
+}
+```
+
+#### Enroll Student
+
+```http
+POST /api/enrollments
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "courseId": 1,
+  "studentId": 2
+}
+```
+
+### Grades Service APIs
+
+#### Submit Grade
+
+```http
+POST /api/grades
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "enrollmentId": 1,
+  "studentId": 2,
+  "courseId": 1,
+  "score": 95.5,
+  "maxScore": 100,
+  "gradeType": "MIDTERM",
+  "comments": "Excellent work"
+}
+```
+
+### Billing Service APIs
+
+#### Create Invoice
+
+```http
+POST /api/invoices
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "studentId": 2,
+  "dueDate": "2024-12-31",
+  "items": [
+    {
+      "description": "Tuition Fee - Fall 2024",
+      "quantity": 1,
+      "unitPrice": 5000.00
+    }
+  ]
+}
+```
+
+#### Process Payment
+
+```http
+POST /api/payments
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "invoiceId": 1,
+  "studentId": 2,
+  "amount": 5000.00,
+  "paymentMethod": "CREDIT_CARD"
+}
+```
+
+### Library Service APIs
+
+#### Add Book
+
+```http
+POST /api/books
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "isbn": "978-0-13-468599-1",
+  "title": "Clean Code",
+  "author": "Robert C. Martin",
+  "category": "Software Engineering",
+  "totalCopies": 5
+}
+```
+
+#### Borrow Book
+
+```http
+POST /api/borrow-records
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "bookId": 1,
+  "userId": 2,
+  "dueDate": "2024-12-31"
+}
+```
+
+## 🐳 Deployment
+
+### Docker Compose Deployment
+
+1. **Build all services:**
+
+```bash
+mvn clean package -DskipTests
+```
+
+2. **Start all services:**
+
+```bash
+docker-compose up -d
+```
+
+3. **View logs:**
+
+```bash
+docker-compose logs -f <service-name>
+```
+
+4. **Stop all services:**
+
+```bash
+docker-compose down
+```
+
+### Production Deployment
+
+For production deployment, consider:
+
+1. **Use environment-specific profiles:**
+
+    - Create `application-prod.yml` for each service
+    - Set `SPRING_PROFILES_ACTIVE=prod`
+
+2. **Externalize configuration:**
+
+    - Use Spring Cloud Config Server
+    - Store secrets in HashiCorp Vault or AWS Secrets Manager
+
+3. **Use managed services:**
+
+    - AWS RDS for PostgreSQL
+    - AWS MSK for Kafka
+    - AWS ElastiCache for Redis
+
+4. **Implement monitoring:**
+    - Add Prometheus metrics
+    - Set up Grafana dashboards
+    - Configure ELK stack for logging
+
+## 📊 Monitoring
+
+### Health Checks
+
+Each service exposes health endpoints:
+
+```http
+GET /actuator/health
+```
+
+### Eureka Dashboard
+
+Monitor all registered services at:
+
+```
+http://localhost:8761
+```
+
+## 🔒 Security
+
+- **JWT Authentication**: All protected endpoints require valid JWT tokens
+- **Password Encryption**: BCrypt hashing for user passwords
+- **HTTPS**: Configure SSL/TLS for production
+- **API Rate Limiting**: Implement using Spring Cloud Gateway filters
+
+## 🧪 Testing
+
+### Run Unit Tests
+
+```bash
+mvn test
+```
+
+### Run Integration Tests
+
+```bash
+mvn verify
+```
+
+## 📝 Project Structure
+
+```
+university-saas/
+├── shared-kernel/          # Common utilities and base classes
+├── service-discovery/      # Eureka Server
+├── api-gateway/            # Spring Cloud Gateway
+├── user-service/           # User management
+├── course-service/         # Course and enrollment
+├── grades-service/         # Grades management
+├── billing-service/        # Billing and payments
+├── library-service/        # Library management
+├── notification-service/   # Notifications (Email/SMS)
+├── docker-compose.yml      # Docker orchestration
+└── pom.xml                 # Parent POM
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
+
+
+## 👥 Authors
+
+- **edsonwade** - Initial work
+
+## 🙏 Acknowledgments
+
+- Spring Boot team for excellent documentation
+- Domain-Driven Design community
+- Microservices patterns community
+
+---
+
+**Built with ❤️ using Spring Boot and Microservices Architecture**
+
 
 ## License ⚖️
 This project is licensed under the [MIT License](https://opensource.org/licenses/MIT).
