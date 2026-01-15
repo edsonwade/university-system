@@ -1,43 +1,162 @@
+version: "3.8"
+
 services:
   student-management-system:
-    image: student-management-system
-    container_name: student-management
+    image: student-management-system:latest
+    build: .
     ports:
-      - "8082:8081"
+      - "8081:8080"
+    deploy:
+      replicas: 2
     depends_on:
-      - postgres
+      postgres-primary:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mongo-router:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
     environment:
-      DATABASE_URL: jdbc:postgresql://postgres:5432/student_management_db
-      POSTGRES_USERNAME: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      SERVER_PORT: '8081'
-      HIBERNATE_DDL_AUTO: 'update'
-      SPRING_PROFILES_ACTIVE: 'docker'
+      SERVER_PORT: "8080"
+      SPRING_PROFILES_ACTIVE: "docker"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-primary:5432/${DB_NAME}
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_MONGODB_URI: mongodb://mongo-router:27017/${MONGO_DB}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_MAIL_HOST: ${MAIL_HOST}
+      SPRING_MAIL_PORT: ${MAIL_PORT}
+      SPRING_MAIL_USERNAME: ${MAIL_USERNAME}
+      SPRING_MAIL_PASSWORD: ${MAIL_PASSWORD}
     env_file:
       - .env
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB} -h postgres" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: on-failure
+    networks:
+      - student-management-net
 
-  postgres:
-    image: postgres:latest
+  postgres-primary:
+    image: bitnami/postgresql:15-debian-11
+    container_name: postgres-primary
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRESQL_USERNAME: ${DB_USERNAME}
+      POSTGRESQL_PASSWORD: ${DB_PASSWORD}
+      POSTGRESQL_DATABASE: ${DB_NAME}
+      POSTGRESQL_REPLICATION_MODE: master
+      POSTGRESQL_REPLICATION_USER: repl_user
+      POSTGRESQL_REPLICATION_PASSWORD: repl_password
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-    env_file:
-      - .env
+      - postgres_primary_data:/bitnami/postgresql
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_NAME}"]
       interval: 10s
       timeout: 5s
       retries: 5
-    restart: always
+    networks:
+      - student-management-net
+    ports:
+      - "5434:5432"
+
+  postgres-replica:
+    image: bitnami/postgresql:15-debian-11
+    container_name: postgres-replica
+    depends_on:
+      - postgres-primary
+    environment:
+      POSTGRESQL_MASTER_HOST: postgres-primary
+      POSTGRESQL_MASTER_PORT_NUMBER: 5432
+      POSTGRESQL_REPLICATION_MODE: slave
+      POSTGRESQL_REPLICATION_USER: repl_user
+      POSTGRESQL_REPLICATION_PASSWORD: repl_password
+      POSTGRESQL_PASSWORD: ${DB_PASSWORD}
+    networks:
+      - student-management-net
+    ports:
+      - "5435:5432"
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - student-management-net
+
+  # MongoDB Sharding Setup
+  mongo-config:
+    image: mongo:6.0
+    container_name: mongo-config
+    command: mongod --configsvr --replSet configRS --port 27017 --bind_ip_all
+    volumes:
+      - mongo_config_data:/data/db
+    networks:
+      - student-management-net
+    ports:
+      - "27017:27017"
+
+  mongo-shard1:
+    image: mongo:6.0
+    container_name: mongo-shard1
+    command: mongod --shardsvr --replSet shard1RS --port 27017 --bind_ip_all
+    volumes:
+      - mongo_shard1_data:/data/db
+    networks:
+      - student-management-net
+    ports:
+      - "27018:27017"
+
+  mongo-router:
+    image: mongo:6.0
+    container_name: mongo-router
+    command: mongos --configdb configRS/mongo-config:27017 --port 27017 --bind_ip_all
+    depends_on:
+      - mongo-config
+      - mongo-shard1
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.runCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - student-management-net
+    ports:
+      - "27019:27017"
+
+  zookeeper:
+    image: bitnami/zookeeper:3.8
+    container_name: zookeeper
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    networks:
+      - student-management-net
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: bitnami/kafka:3.4
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    environment:
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+    healthcheck:
+      test:
+        ["CMD-SHELL", "kafka-topics.sh --bootstrap-server kafka:9092 --list"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+    networks:
+      - student-management-net
+    ports:
+      - "9092:9092"
 
   prometheus:
     image: prom/prometheus:latest
@@ -45,33 +164,58 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - "./src/main/resources/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml"
-      - prometheus_data:/prometheus
-    restart: unless-stopped
-    command:
-      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "./prometheus.yml:/etc/prometheus/prometheus.yml"
     networks:
       - student-management-net
 
   grafana:
-    image: grafana/grafana
+    image: grafana/grafana:latest
     container_name: grafana
     ports:
-      - "3001:3000"
-    volumes:
-      - grafana_data:/var/lib/grafana
+      - "3000:3000"
     depends_on:
       - prometheus
-    restart: always
     networks:
       - student-management-net
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter
+    container_name: postgres-exporter
     environment:
-      GF_SECURITY_ADMIN_PASSWORD: admin
+      DATA_SOURCE_NAME: "postgresql://${DB_USERNAME}:${DB_PASSWORD}@postgres-primary:5432/${DB_NAME}?sslmode=disable"
+    depends_on:
+      - postgres-primary
+    networks:
+      - student-management-net
+    ports:
+      - "9187:9187"
+
+  mongodb-exporter:
+    image: percona/mongodb_exporter:0.39
+    container_name: mongodb-exporter
+    command: ["--mongodb.uri=mongodb://mongo-router:27017"]
+    depends_on:
+      - mongo-router
+    networks:
+      - student-management-net
+    ports:
+      - "9216:9216"
+
+  kafka-exporter:
+    image: danielqsj/kafka-exporter
+    container_name: kafka-exporter
+    command: ["--kafka.server=kafka:9092"]
+    depends_on:
+      - kafka
+    networks:
+      - student-management-net
+    ports:
+      - "9308:9308"
 
 volumes:
-  postgres_data:
-  prometheus_data:
-  grafana_data:
+  postgres_primary_data:
+  mongo_config_data:
+  mongo_shard1_data:
 
 networks:
   student-management-net:
