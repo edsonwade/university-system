@@ -14,20 +14,33 @@ COPY src src
 RUN mvn package -DskipTests
 
 
-#########################################
-# Package Stage: Create the final container image
-#########################################
-FROM openjdk:17
+# ============================================
+# Stage 2: Runtime
+# ============================================
+FROM eclipse-temurin:17-jre-alpine
 
-# Set environment variables
-ENV SERVER_PORT=8081
+WORKDIR /app
 
-# Copy the built JAR file from the build stage to the new image
-COPY --from=builder /app/target/*.jar /student-management.jar
+# Create non-root user for security
+RUN addgroup -g 1001 -S appgroup && \
+    adduser -u 1001 -S appuser -G appgroup
 
-# Expose the port that the application will run on
-EXPOSE ${SERVER_PORT}
+# Copy the built JAR from builder stage
+COPY --from=builder /app/target/*.jar app.jar
 
-# Specify the command to run your application
-ENTRYPOINT ["java", "-jar", "/student-management.jar"]
+# Change ownership
+RUN chown -R appuser:appgroup /app
 
+# Switch to non-root user
+USER appuser
+
+# Expose the application port
+EXPOSE 8080
+
+
+
+# JVM optimization for containers
+ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -Djava.security.egd=file:/dev/./urandom"
+
+# Run the application
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

@@ -60,6 +60,9 @@ application:
 
 # Actuator Configuration
 management:
+  health:
+    mail:
+      enabled: false
   endpoints:
     web:
       exposure:

@@ -1,6 +1,6 @@
 -- Initial Schema for Student Management SaaS
 -- Users and Auth
-CREATE TABLE IF NOT EXISTS user (
+CREATE TABLE IF NOT EXISTS _user (
     id BIGSERIAL PRIMARY KEY,
     firstname VARCHAR(255),
     lastname VARCHAR(255),
