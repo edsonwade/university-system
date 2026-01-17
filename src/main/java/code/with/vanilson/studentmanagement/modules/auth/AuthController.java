@@ -53,7 +53,7 @@ public class AuthController {
                                     .accessToken(token)
                                     .refreshToken(requestRefreshToken)
                                     .build(),
-                            "Token refreshed successfully"));
+                            "auth.refresh_token_success"));
                 })
                 .orElseThrow(() -> new ResourceBadRequestException(
                         "auth.token_not_found"));

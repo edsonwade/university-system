@@ -15,9 +15,17 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static code.with.vanilson.studentmanagement.modules.auth.Role.USER;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
@@ -52,7 +60,7 @@ class AuthServiceTest {
                 .lastname("Doe")
                 .email("john.doe@example.com")
                 .password("password")
-                .role(Role.USER)
+                .role(USER)
                 .build();
 
         User user = User.builder()
@@ -60,7 +68,7 @@ class AuthServiceTest {
                 .lastname("Doe")
                 .email("john.doe@example.com")
                 .password("encodedPassword")
-                .role(Role.USER)
+                .role(USER)
                 .build();
         user.setId(1L);
 
@@ -68,7 +76,7 @@ class AuthServiceTest {
 
         when(passwordEncoder.encode(request.getPassword())).thenReturn("encodedPassword");
         when(repository.save(any(User.class))).thenReturn(user); // Actually save returns void or User, but mock handles
-                                                                 // it
+        // it
         when(jwtUtils.generateToken(any(User.class))).thenReturn("jwtToken");
         when(refreshTokenService.createRefreshToken(user.getId())).thenReturn(refreshToken);
 
@@ -131,7 +139,7 @@ class AuthServiceTest {
         });
 
         assertEquals("auth.user_not_found", exception.getMessage());
-        assertArrayEquals(new Object[] { request.getEmail() }, exception.getArgs());
+        assertArrayEquals(new Object[]{request.getEmail()}, exception.getArgs());
         verify(authenticationManager, times(1)).authenticate(any(UsernamePasswordAuthenticationToken.class));
         verify(repository, times(1)).findByEmail(request.getEmail());
     }

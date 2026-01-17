@@ -1,0 +1,5 @@
+lowercaseOutputName: true
+lowercaseOutputLabel: true
+whitelistObjectNames:
+  - "org.apache.cassandra.metrics:*"
+  - "java.lang:*"

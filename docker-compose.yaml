@@ -1,13 +1,12 @@
-version: "3.8"
-
 services:
   student-management-system:
     image: student-management-system:latest
     build: .
+    container_name: student-management-system
     ports:
       - "8081:8080"
     deploy:
-      replicas: 2
+      replicas: 1
     depends_on:
       postgres-primary:
         condition: service_healthy
@@ -31,13 +30,28 @@ services:
       SPRING_MAIL_PORT: ${MAIL_PORT}
       SPRING_MAIL_USERNAME: ${MAIL_USERNAME}
       SPRING_MAIL_PASSWORD: ${MAIL_PASSWORD}
+      MANAGEMENT_HEALTH_MAIL_ENABLED: "false"
+      MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: "always"
     env_file:
       - .env
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "-q",
+          "--spider",
+          "http://localhost:8080/actuator/health",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
     networks:
       - student-management-net
 
   postgres-primary:
-    image: bitnami/postgresql:15-debian-11
+    image: bitnami/postgresql:latest
     container_name: postgres-primary
     environment:
       POSTGRESQL_USERNAME: ${DB_USERNAME}
@@ -59,7 +73,7 @@ services:
       - "5434:5432"
 
   postgres-replica:
-    image: bitnami/postgresql:15-debian-11
+    image: bitnami/postgresql:latest
     container_name: postgres-replica
     depends_on:
       - postgres-primary
@@ -70,6 +84,11 @@ services:
       POSTGRESQL_REPLICATION_USER: repl_user
       POSTGRESQL_REPLICATION_PASSWORD: repl_password
       POSTGRESQL_PASSWORD: ${DB_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - student-management-net
     ports:
@@ -95,6 +114,19 @@ services:
     command: mongod --configsvr --replSet configRS --port 27017 --bind_ip_all
     volumes:
       - mongo_config_data:/data/db
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mongosh",
+          "--port",
+          "27017",
+          "--eval",
+          "db.runCommand('ping').ok",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - student-management-net
     ports:
@@ -106,6 +138,19 @@ services:
     command: mongod --shardsvr --replSet shard1RS --port 27017 --bind_ip_all
     volumes:
       - mongo_shard1_data:/data/db
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mongosh",
+          "--port",
+          "27017",
+          "--eval",
+          "db.runCommand('ping').ok",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - student-management-net
     ports:
@@ -119,44 +164,78 @@ services:
       - mongo-config
       - mongo-shard1
     healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.runCommand('ping').ok"]
+      test:
+        [
+          "CMD",
+          "mongosh",
+          "--eval",
+          "db.adminCommand({ listShards: 1 }).shards.length > 0",
+        ]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
     networks:
       - student-management-net
     ports:
       - "27019:27017"
 
-  zookeeper:
-    image: bitnami/zookeeper:3.8
-    container_name: zookeeper
-    environment:
-      - ALLOW_ANONYMOUS_LOGIN=yes
+  mongo-init:
+    image: mongo:6.0
+    container_name: mongo-init
+    depends_on:
+      - mongo-config
+      - mongo-shard1
+      - mongo-router
+    volumes:
+      - ./mongo-init.sh:/mongo-init.sh:ro
+    entrypoint: ["/bin/bash", "/mongo-init.sh"]
     networks:
       - student-management-net
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.3.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
     ports:
       - "2181:2181"
+    networks:
+      - student-management-net
+    healthcheck:
+      test: ["CMD-SHELL", "echo srvr | nc localhost 2181 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   kafka:
-    image: bitnami/kafka:3.4
+    image: confluentinc/cp-kafka:7.3.0
     container_name: kafka
     depends_on:
       - zookeeper
     environment:
-      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
-      - ALLOW_PLAINTEXT_LISTENER=yes
-      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
-    healthcheck:
-      test:
-        ["CMD-SHELL", "kafka-topics.sh --bootstrap-server kafka:9092 --list"]
-      interval: 20s
-      timeout: 10s
-      retries: 5
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      EXTRA_ARGS: "-javaagent:/opt/prometheus/jmx_prometheus_javaagent.jar=7071:/opt/prometheus/kafka-exporter.yml"
+    ports:
+      - "29092:29092"
+      - "9092:9092"
+      - "7071:7071"
+    volumes:
+      - ./monitoring/exporters/kafka-exporter.yml:/opt/prometheus/kafka-exporter.yml:ro
+      - ./monitoring/exporters/jmx_prometheus_javaagent.jar:/opt/prometheus/jmx_prometheus_javaagent.jar:ro
     networks:
       - student-management-net
-    ports:
-      - "9092:9092"
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 9092 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   prometheus:
     image: prom/prometheus:latest
@@ -165,6 +244,11 @@ services:
       - "9090:9090"
     volumes:
       - "./prometheus.yml:/etc/prometheus/prometheus.yml"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - student-management-net
 
@@ -175,6 +259,12 @@ services:
       - "3000:3000"
     depends_on:
       - prometheus
+    healthcheck:
+      test:
+        ["CMD", "wget", "-q", "--spider", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - student-management-net
 
@@ -185,6 +275,11 @@ services:
       DATA_SOURCE_NAME: "postgresql://${DB_USERNAME}:${DB_PASSWORD}@postgres-primary:5432/${DB_NAME}?sslmode=disable"
     depends_on:
       - postgres-primary
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 9187 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - student-management-net
     ports:
@@ -196,6 +291,11 @@ services:
     command: ["--mongodb.uri=mongodb://mongo-router:27017"]
     depends_on:
       - mongo-router
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 9216 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - student-management-net
     ports:
@@ -206,7 +306,13 @@ services:
     container_name: kafka-exporter
     command: ["--kafka.server=kafka:9092"]
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 9308 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - student-management-net
     ports:
