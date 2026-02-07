@@ -14,12 +14,15 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
-import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class StudentIntegrationTest extends AbstractIntegrationTest {
 
@@ -43,7 +46,9 @@ class StudentIntegrationTest extends AbstractIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        Objects.requireNonNull(cacheManager.getCache("students")).clear();
+        if (cacheManager != null && cacheManager.getCache("students") != null) {
+            cacheManager.getCache("students").clear();
+        }
         appointmentRepository.deleteAll();
         invoiceRepository.deleteAll();
         studentRepository.deleteAll();
