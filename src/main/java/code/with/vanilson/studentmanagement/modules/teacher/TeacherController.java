@@ -27,4 +27,12 @@ public class TeacherController {
     public ResponseEntity<ApiResponse<List<Teacher>>> getAllTeachers() {
         return ResponseEntity.ok(ApiResponse.success(service.getAllTeachers(), "Teachers retrieved successfully"));
     }
+
+    @GetMapping("/{id}")
+    @io.swagger.v3.oas.annotations.Operation(summary = "Get teacher by ID", description = "Retrieves a teacher by their unique ID.")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Teacher retrieved successfully")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Teacher not found")
+    public ResponseEntity<ApiResponse<Teacher>> getTeacherById(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.success(service.getTeacherById(id), "Teacher retrieved successfully"));
+    }
 }

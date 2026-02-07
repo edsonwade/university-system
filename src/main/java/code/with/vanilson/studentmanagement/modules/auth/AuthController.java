@@ -24,7 +24,7 @@ public class AuthController {
     @io.swagger.v3.oas.annotations.Operation(summary = "Register a new user", description = "Creates a new user account and returns an access token and refresh token.")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "User registered successfully")
     public ResponseEntity<ApiResponse<AuthenticationResponse>> register(
-            @RequestBody RegisterRequest request) {
+            @jakarta.validation.Valid @RequestBody RegisterRequest request) {
         return ResponseEntity.ok(ApiResponse.success(service.register(request), "User registered successfully"));
     }
 
@@ -32,7 +32,7 @@ public class AuthController {
     @io.swagger.v3.oas.annotations.Operation(summary = "Authenticate user", description = "Authenticates a user and returns an access token and refresh token.")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "User authenticated successfully")
     public ResponseEntity<ApiResponse<AuthenticationResponse>> authenticate(
-            @RequestBody AuthenticationRequest request) {
+            @jakarta.validation.Valid @RequestBody AuthenticationRequest request) {
         return ResponseEntity.ok(ApiResponse.success(service.authenticate(request), "User authenticated successfully"));
     }
 
@@ -40,7 +40,8 @@ public class AuthController {
     @io.swagger.v3.oas.annotations.Operation(summary = "Refresh access token", description = "Generates a new access token using a valid refresh token.")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Token refreshed successfully")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid or expired refresh token")
-    public ResponseEntity<ApiResponse<TokenRefreshResponse>> refreshtoken(@RequestBody TokenRefreshRequest request) {
+    public ResponseEntity<ApiResponse<TokenRefreshResponse>> refreshtoken(
+            @jakarta.validation.Valid @RequestBody TokenRefreshRequest request) {
         String requestRefreshToken = request.getRefreshToken();
 
         return refreshTokenService.findByToken(requestRefreshToken)

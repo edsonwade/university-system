@@ -20,6 +20,9 @@ public class AuthService {
         private final EmailService emailService;
 
         public AuthenticationResponse register(RegisterRequest request) {
+                if (repository.findByEmail(request.getEmail()).isPresent()) {
+                    throw new code.with.vanilson.studentmanagement.common.exception.ResourceAlreadyExistsException("auth.user_already_exists", request.getEmail());
+                }
                 var user = User.builder()
                                 .firstname(request.getFirstname())
                                 .lastname(request.getLastname())

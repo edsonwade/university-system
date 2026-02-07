@@ -22,6 +22,9 @@ public class BillingService {
 
     @Transactional
     public Invoice createInvoice(Long studentId, BigDecimal amount, LocalDate dueDate) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new ResourceBadRequestException("billing.invalid_amount", amount);
+        }
         Invoice invoice = Invoice.builder()
                 .studentId(studentId)
                 .amount(amount)

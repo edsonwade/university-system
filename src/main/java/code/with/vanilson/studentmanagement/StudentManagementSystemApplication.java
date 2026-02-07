@@ -8,9 +8,7 @@ import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
-@EnableKafka
 @EnableCaching
-@EnableJpaAuditing
 @EnableScheduling
 public class StudentManagementSystemApplication {
 

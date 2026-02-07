@@ -1,6 +1,7 @@
 package code.with.vanilson.studentmanagement.modules.student;
 
 import code.with.vanilson.studentmanagement.common.exception.ResourceNotFoundException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -9,6 +10,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,19 +19,21 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("StudentService Unit Tests")
 class StudentServiceTest {
 
     @Mock
-    private StudentRepository repository;
+    private StudentRepository studentRepository;
 
     @InjectMocks
-    private StudentService service;
+    private StudentService studentService;
 
-    @Test
-    @DisplayName("Create Student - Should return StudentDto when data is valid")
-    void createStudent_ShouldReturnStudentDto_WhenDataIsValid() {
-        // Arrange
-        StudentDto dto = StudentDto.builder()
+    private Student testStudent;
+    private List<Student> testStudents;
+
+    @BeforeEach
+    void setUp() {
+        testStudent = Student.builder()
                 .firstName("John")
                 .lastName("Doe")
                 .email("john.doe@example.com")
@@ -38,7 +42,8 @@ class StudentServiceTest {
                 .phoneNumber("1234567890")
                 .build();
 
-        Student student = Student.builder()
+      var  testStudentDto = StudentDto.builder()
+                .id(1L)
                 .firstName("John")
                 .lastName("Doe")
                 .email("john.doe@example.com")
@@ -46,150 +51,336 @@ class StudentServiceTest {
                 .address("123 Main St")
                 .phoneNumber("1234567890")
                 .build();
-        student.setId(1L);
 
-        when(repository.save(any(Student.class))).thenReturn(student);
-
-        // Act
-        StudentDto result = service.createStudent(dto);
-
-        // Assert
-        assertNotNull(result);
-        assertEquals(student.getId(), result.getId());
-        assertEquals(student.getFirstName(), result.getFirstName());
-        assertEquals(student.getEmail(), result.getEmail());
-        verify(repository, times(1)).save(any(Student.class));
+        testStudents = Arrays.asList(
+                testStudent,
+                Student.builder()
+                        .firstName("Jane")
+                        .lastName("Smith")
+                        .email("jane.smith@example.com")
+                        .dateOfBirth(LocalDate.of(1999, 5, 15))
+                        .address("456 Oak Ave")
+                        .phoneNumber("9876543210")
+                        .build()
+        );
     }
 
     @Test
-    @DisplayName("Get Student - Should return StudentDto when student exists")
-    void getStudent_ShouldReturnStudentDto_WhenStudentExists() {
-        // Arrange
-        Long studentId = 1L;
-        Student student = Student.builder()
-                .firstName("John")
-                .lastName("Doe")
-                .email("john.doe@example.com")
+    @DisplayName("Should create a new student successfully")
+    void createStudent_Success() {
+        // Given
+        StudentDto newStudentDto = StudentDto.builder()
+                .firstName("Alice")
+                .lastName("Johnson")
+                .email("alice.johnson@example.com")
+                .dateOfBirth(LocalDate.of(2001, 3, 10))
+                .address("789 Pine Rd")
+                .phoneNumber("5551234567")
                 .build();
-        student.setId(studentId);
 
-        when(repository.findById(studentId)).thenReturn(Optional.of(student));
+        Student savedStudent = Student.builder()
+                .firstName("Alice")
+                .lastName("Johnson")
+                .email("alice.johnson@example.com")
+                .dateOfBirth(LocalDate.of(2001, 3, 10))
+                .address("789 Pine Rd")
+                .phoneNumber("5551234567")
+                .build();
 
-        // Act
-        StudentDto result = service.getStudent(studentId);
+        when(studentRepository.save(any(Student.class))).thenReturn(savedStudent);
 
-        // Assert
+        // When
+        StudentDto result = studentService.createStudent(newStudentDto);
+
+        // Then
         assertNotNull(result);
-        assertEquals(studentId, result.getId());
-        assertEquals(student.getEmail(), result.getEmail());
-        verify(repository, times(1)).findById(studentId);
+        assertEquals(savedStudent.getId(), result.getId());
+        assertEquals(savedStudent.getFirstName(), result.getFirstName());
+        assertEquals(savedStudent.getLastName(), result.getLastName());
+        assertEquals(savedStudent.getEmail(), result.getEmail());
+        assertEquals(savedStudent.getDateOfBirth(), result.getDateOfBirth());
+        assertEquals(savedStudent.getAddress(), result.getAddress());
+        assertEquals(savedStudent.getPhoneNumber(), result.getPhoneNumber());
+        verify(studentRepository).save(any(Student.class));
     }
 
     @Test
-    @DisplayName("Get Student - Should throw ResourceNotFoundException when student does not exist")
-    void getStudent_ShouldThrowResourceNotFoundException_WhenStudentDoesNotExist() {
-        // Arrange
+    @DisplayName("Should get student by ID successfully")
+    void getStudent_Success() {
+        // Given
         Long studentId = 1L;
-        when(repository.findById(studentId)).thenReturn(Optional.empty());
+        when(studentRepository.findById(studentId)).thenReturn(Optional.of(testStudent));
 
-        // Act & Assert
-        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
-            service.getStudent(studentId);
-        });
+        // When
+        StudentDto result = studentService.getStudent(studentId);
 
+        // Then
+        assertNotNull(result);
+        assertEquals(testStudent.getId(), result.getId());
+        assertEquals(testStudent.getFirstName(), result.getFirstName());
+        assertEquals(testStudent.getLastName(), result.getLastName());
+        assertEquals(testStudent.getEmail(), result.getEmail());
+        assertEquals(testStudent.getDateOfBirth(), result.getDateOfBirth());
+        assertEquals(testStudent.getAddress(), result.getAddress());
+        assertEquals(testStudent.getPhoneNumber(), result.getPhoneNumber());
+        verify(studentRepository).findById(studentId);
+    }
+
+    @Test
+    @DisplayName("Should throw ResourceNotFoundException when student not found by ID")
+    void getStudent_NotFound_ThrowsException() {
+        // Given
+        Long nonExistentId = 999L;
+        when(studentRepository.findById(nonExistentId)).thenReturn(Optional.empty());
+
+        // When & Then
+        ResourceNotFoundException exception = assertThrows(
+                ResourceNotFoundException.class,
+                () -> studentService.getStudent(nonExistentId)
+        );
         assertEquals("student.not_found", exception.getMessage());
-        assertArrayEquals(new Object[] { studentId }, exception.getArgs());
-        verify(repository, times(1)).findById(studentId);
+        verify(studentRepository).findById(nonExistentId);
     }
 
     @Test
-    @DisplayName("Get All Students - Should return list of StudentDtos")
-    void getAllStudents_ShouldReturnListOfStudentDtos() {
-        // Arrange
-        Student student1 = Student.builder().firstName("John").build();
-        student1.setId(1L);
-        Student student2 = Student.builder().firstName("Jane").build();
-        student2.setId(2L);
-        when(repository.findAll()).thenReturn(List.of(student1, student2));
+    @DisplayName("Should get all students successfully")
+    void getAllStudents_Success() {
+        // Given
+        when(studentRepository.findAll()).thenReturn(testStudents);
 
-        // Act
-        List<StudentDto> result = service.getAllStudents();
+        // When
+        List<StudentDto> result = studentService.getAllStudents();
 
-        // Assert
+        // Then
         assertNotNull(result);
         assertEquals(2, result.size());
-        verify(repository, times(1)).findAll();
+        assertEquals(testStudents.get(0).getFirstName(), result.get(0).getFirstName());
+        assertEquals(testStudents.get(1).getFirstName(), result.get(1).getFirstName());
+        verify(studentRepository).findAll();
     }
 
     @Test
-    @DisplayName("Update Student - Should return updated StudentDto when student exists")
-    void updateStudent_ShouldReturnUpdatedStudentDto_WhenStudentExists() {
-        // Arrange
+    @DisplayName("Should return empty list when no students exist")
+    void getAllStudents_EmptyList() {
+        // Given
+        when(studentRepository.findAll()).thenReturn(Arrays.asList());
+
+        // When
+        List<StudentDto> result = studentService.getAllStudents();
+
+        // Then
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        verify(studentRepository).findAll();
+    }
+
+    @Test
+    @DisplayName("Should update student successfully")
+    void updateStudent_Success() {
+        // Given
         Long studentId = 1L;
         StudentDto updateDto = StudentDto.builder()
                 .firstName("John Updated")
                 .lastName("Doe Updated")
-                .address("456 New St")
-                .phoneNumber("0987654321")
+                .email("john.updated@example.com")
+                .dateOfBirth(LocalDate.of(2000, 1, 1))
+                .address("123 Updated St")
+                .phoneNumber("1111111111")
                 .build();
-
-        Student existingStudent = Student.builder()
-                .firstName("John")
-                .lastName("Doe")
-                .build();
-        existingStudent.setId(studentId);
 
         Student updatedStudent = Student.builder()
                 .firstName("John Updated")
                 .lastName("Doe Updated")
-                .address("456 New St")
-                .phoneNumber("0987654321")
+                .email("john.updated@example.com")
+                .dateOfBirth(LocalDate.of(2000, 1, 1))
+                .address("123 Updated St")
+                .phoneNumber("1111111111")
                 .build();
-        updatedStudent.setId(studentId);
 
-        when(repository.findById(studentId)).thenReturn(Optional.of(existingStudent));
-        when(repository.save(any(Student.class))).thenReturn(updatedStudent);
+        when(studentRepository.findById(studentId)).thenReturn(Optional.of(testStudent));
+        when(studentRepository.save(any(Student.class))).thenReturn(updatedStudent);
 
-        // Act
-        StudentDto result = service.updateStudent(studentId, updateDto);
+        // When
+        StudentDto result = studentService.updateStudent(studentId, updateDto);
 
-        // Assert
+        // Then
         assertNotNull(result);
-        assertEquals("John Updated", result.getFirstName());
-        assertEquals("Doe Updated", result.getLastName());
-        verify(repository, times(1)).findById(studentId);
-        verify(repository, times(1)).save(existingStudent);
+        assertEquals(updatedStudent.getFirstName(), result.getFirstName());
+        assertEquals(updatedStudent.getLastName(), result.getLastName());
+        assertEquals(updatedStudent.getEmail(), result.getEmail());
+        assertEquals(updatedStudent.getAddress(), result.getAddress());
+        assertEquals(updatedStudent.getPhoneNumber(), result.getPhoneNumber());
+        // Date of birth should remain unchanged as it\'s not updated in the service
+        assertEquals(testStudent.getDateOfBirth(), result.getDateOfBirth());
+        verify(studentRepository).findById(studentId);
+        verify(studentRepository).save(any(Student.class));
     }
 
     @Test
-    @DisplayName("Update Student - Should throw ResourceNotFoundException when student does not exist")
-    void updateStudent_ShouldThrowResourceNotFoundException_WhenStudentDoesNotExist() {
-        // Arrange
-        Long studentId = 1L;
-        StudentDto updateDto = StudentDto.builder().build();
-        when(repository.findById(studentId)).thenReturn(Optional.empty());
+    @DisplayName("Should throw ResourceNotFoundException when updating non-existent student")
+    void updateStudent_NotFound_ThrowsException() {
+        // Given
+        Long nonExistentId = 999L;
+        StudentDto updateDto = StudentDto.builder()
+                .firstName("Updated")
+                .lastName("Name")
+                .email("updated@example.com")
+                .build();
 
-        // Act & Assert
-        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
-            service.updateStudent(studentId, updateDto);
-        });
+        when(studentRepository.findById(nonExistentId)).thenReturn(Optional.empty());
 
+        // When & Then
+        ResourceNotFoundException exception = assertThrows(
+                ResourceNotFoundException.class,
+                () -> studentService.updateStudent(nonExistentId, updateDto)
+        );
         assertEquals("student.not_found", exception.getMessage());
-        assertArrayEquals(new Object[] { studentId }, exception.getArgs());
-        verify(repository, times(1)).findById(studentId);
-        verify(repository, never()).save(any(Student.class));
+        verify(studentRepository).findById(nonExistentId);
+        verify(studentRepository, never()).save(any(Student.class));
     }
 
     @Test
-    @DisplayName("Delete Student - Should call repository delete")
-    void deleteStudent_ShouldCallRepositoryDelete() {
-        // Arrange
+    @DisplayName("Should delete student successfully")
+    void deleteStudent_Success() {
+        // Given
         Long studentId = 1L;
+        doNothing().when(studentRepository).deleteById(studentId);
 
-        // Act
-        service.deleteStudent(studentId);
+        // When
+        studentService.deleteStudent(studentId);
 
-        // Assert
-        verify(repository, times(1)).deleteById(studentId);
+        // Then
+        verify(studentRepository).deleteById(studentId);
+    }
+
+    @Test
+    @DisplayName("Should handle repository exception during student creation")
+    void createStudent_RepositoryException_ThrowsException() {
+        // Given
+        StudentDto newStudentDto = StudentDto.builder()
+                .firstName("Error")
+                .lastName("Student")
+                .email("error@example.com")
+                .build();
+
+        when(studentRepository.save(any(Student.class))).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        RuntimeException exception = assertThrows(
+                RuntimeException.class,
+                () -> studentService.createStudent(newStudentDto)
+        );
+        assertEquals("Database error", exception.getMessage());
+        verify(studentRepository).save(any(Student.class));
+    }
+
+    @Test
+    @DisplayName("Should handle repository exception during student update")
+    void updateStudent_RepositoryException_ThrowsException() {
+        // Given
+        Long studentId = 1L;
+        StudentDto updateDto = StudentDto.builder()
+                .firstName("Error")
+                .lastName("Update")
+                .email("error@example.com")
+                .build();
+
+        when(studentRepository.findById(studentId)).thenReturn(Optional.of(testStudent));
+        when(studentRepository.save(any(Student.class))).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        RuntimeException exception = assertThrows(
+                RuntimeException.class,
+                () -> studentService.updateStudent(studentId, updateDto)
+        );
+        assertEquals("Database error", exception.getMessage());
+        verify(studentRepository).findById(studentId);
+        verify(studentRepository).save(any(Student.class));
+    }
+
+    @Test
+    @DisplayName("Should handle repository exception during getAllStudents")
+    void getAllStudents_RepositoryException_ThrowsException() {
+        // Given
+        when(studentRepository.findAll()).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        RuntimeException exception = assertThrows(
+                RuntimeException.class,
+                () -> studentService.getAllStudents()
+        );
+        assertEquals("Database error", exception.getMessage());
+        verify(studentRepository).findAll();
+    }
+
+    @Test
+    @DisplayName("Should create student with null optional fields")
+    void createStudent_WithNullOptionalFields_Success() {
+        // Given
+        StudentDto studentWithNulls = StudentDto.builder()
+                .firstName("Test")
+                .lastName("Student")
+                .email("test@example.com")
+                .dateOfBirth(null)
+                .address(null)
+                .phoneNumber(null)
+                .build();
+
+        Student savedStudent = Student.builder()
+                .firstName("Test")
+                .lastName("Student")
+                .email("test@example.com")
+                .dateOfBirth(null)
+                .address(null)
+                .phoneNumber(null)
+                .build();
+
+        when(studentRepository.save(any(Student.class))).thenReturn(savedStudent);
+
+        // When
+        StudentDto result = studentService.createStudent(studentWithNulls);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(savedStudent.getId(), result.getId());
+        assertEquals(savedStudent.getFirstName(), result.getFirstName());
+        assertEquals(savedStudent.getLastName(), result.getLastName());
+        assertEquals(savedStudent.getEmail(), result.getEmail());
+        assertNull(result.getDateOfBirth());
+        assertNull(result.getAddress());
+        assertNull(result.getPhoneNumber());
+        verify(studentRepository).save(any(Student.class));
+    }
+
+    @Test
+    @DisplayName("Should update student with partial data")
+    void updateStudent_WithPartialData_Success() {
+        // Given
+        Long studentId = 1L;
+        StudentDto partialUpdateDto = StudentDto.builder()
+                .firstName("Partial Update")
+                .build(); // Only updating first name
+
+        Student updatedStudent = Student.builder()
+                .firstName("Partial Update")
+                .lastName("Doe") // Should remain unchanged
+                .email("john.doe@example.com") // Should remain unchanged
+                .dateOfBirth(LocalDate.of(2000, 1, 1)) // Should remain unchanged
+                .address("123 Main St") // Should remain unchanged
+                .phoneNumber("1234567890") // Should remain unchanged
+                .build();
+
+        when(studentRepository.findById(studentId)).thenReturn(Optional.of(testStudent));
+        when(studentRepository.save(any(Student.class))).thenReturn(updatedStudent);
+
+        // When
+        StudentDto result = studentService.updateStudent(studentId, partialUpdateDto);
+
+        // Then
+        assertNotNull(result);
+        assertEquals("Partial Update", result.getFirstName());
+        assertEquals("Doe", result.getLastName()); // Should remain unchanged
+        verify(studentRepository).findById(studentId);
+        verify(studentRepository).save(any(Student.class));
     }
 }

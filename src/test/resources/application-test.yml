@@ -1,0 +1,61 @@
+spring:
+  application:
+    name: student-management-system-test
+  datasource:
+    driver-class-name: org.postgresql.Driver
+  jpa:
+
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
+    modules:
+      - com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    clean-disabled: false
+
+  # Disable Kafka for tests unless explicitly needed
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+
+
+  mail:
+    host: localhost
+    port: 3025
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+
+logging:
+  level:
+    root: INFO
+    code.with.vanilson.studentmanagement: DEBUG
+    org.springframework.web: INFO
+    org.hibernate.SQL: DEBUG
+    org.flywaydb: INFO
+
+server:
+  error:
+    include-message: always
+    include-binding-errors: always
+
+# JWT Configuration for tests
+jwt:
+  secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+  expiration: 86400000
+  refresh-token:
+    expiration: 604800000

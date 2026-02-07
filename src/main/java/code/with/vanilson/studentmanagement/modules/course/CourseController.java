@@ -27,4 +27,11 @@ public class CourseController {
     public ResponseEntity<ApiResponse<List<Course>>> getAllCourses() {
         return ResponseEntity.ok(ApiResponse.success(service.getAllCourses(), "Courses retrieved successfully"));
     }
+
+    @GetMapping("/{id}")
+    @io.swagger.v3.oas.annotations.Operation(summary = "Get course by ID", description = "Retrieves a course by its ID.")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Course retrieved successfully")
+    public ResponseEntity<ApiResponse<Course>> getCourseById(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.success(service.getCourseById(id), "Course retrieved successfully"));
+    }
 }

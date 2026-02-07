@@ -1,6 +1,7 @@
 package code.with.vanilson.studentmanagement.modules.course;
 
 import code.with.vanilson.studentmanagement.common.exception.ResourceNotFoundException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -8,97 +9,230 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("DegreeService Unit Tests")
 class DegreeServiceTest {
 
     @Mock
-    private DegreeRepository repository;
+    private DegreeRepository degreeRepository;
 
     @InjectMocks
-    private DegreeService service;
+    private DegreeService degreeService;
 
-    @Test
-    @DisplayName("Create Degree - Should return Degree when data is valid")
-    void createDegree_ShouldReturnDegree_WhenDataIsValid() {
-        // Arrange
-        Degree degree = Degree.builder()
-                .name("Computer Science")
+    private Degree testDegree;
+    private List<Degree> testDegrees;
+
+    @BeforeEach
+    void setUp() {
+        testDegree = Degree.builder()
+                .name("Bachelor of Computer Science")
+                .department("Computer Science")
+                .durationYears(4)
                 .build();
-        degree.setId(1L);
 
-        when(repository.save(any(Degree.class))).thenReturn(degree);
-
-        // Act
-        Degree result = service.createDegree(degree);
-
-        // Assert
-        assertNotNull(result);
-        assertEquals(degree.getId(), result.getId());
-        assertEquals(degree.getName(), result.getName());
-        verify(repository, times(1)).save(degree);
+        testDegrees = Arrays.asList(
+                testDegree,
+                Degree.builder()
+                        .name("Bachelor of Mathematics")
+                        .department("Mathematics")
+                        .durationYears(3)
+                        .build()
+        );
     }
 
     @Test
-    @DisplayName("Get All Degrees - Should return list of Degrees")
-    void getAllDegrees_ShouldReturnListOfDegrees() {
-        // Arrange
-        Degree degree1 = Degree.builder().name("CS").build();
-        degree1.setId(1L);
-        Degree degree2 = Degree.builder().name("SE").build();
-        degree2.setId(2L);
-        when(repository.findAll()).thenReturn(List.of(degree1, degree2));
+    @DisplayName("Should create a new degree successfully")
+    void createDegree_Success() {
+        // Given
+        Degree newDegree = Degree.builder()
+                .name("Master of Science")
+                .department("MSC")
+                .durationYears(2)
+                .build();
 
-        // Act
-        List<Degree> result = service.getAllDegrees();
+        Degree savedDegree = Degree.builder()
+                .name("Master of Science")
+                .department("MSC")
+                .durationYears(2)
+                .build();
 
-        // Assert
+        when(degreeRepository.save(any(Degree.class))).thenReturn(savedDegree);
+
+        // When
+        Degree result = degreeService.createDegree(newDegree);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(savedDegree.getId(), result.getId());
+        assertEquals(savedDegree.getName(), result.getName());
+        assertEquals(savedDegree.getDepartment(), result.getDepartment());
+        assertEquals(savedDegree.getDurationYears(), result.getDurationYears());
+
+        verify(degreeRepository).save(any(Degree.class));
+    }
+
+    @Test
+    @DisplayName("Should get all degrees successfully")
+    void getAllDegrees_Success() {
+        // Given
+        when(degreeRepository.findAll()).thenReturn(testDegrees);
+
+        // When
+        List<Degree> result = degreeService.getAllDegrees();
+
+        // Then
         assertNotNull(result);
         assertEquals(2, result.size());
-        verify(repository, times(1)).findAll();
+        assertEquals(testDegrees.get(0).getId(), result.get(0).getId());
+        assertEquals(testDegrees.get(1).getId(), result.get(1).getId());
+        verify(degreeRepository).findAll();
     }
 
     @Test
-    @DisplayName("Get Degree By ID - Should return Degree when degree exists")
-    void getDegreeById_ShouldReturnDegree_WhenDegreeExists() {
-        // Arrange
-        Long degreeId = 1L;
-        Degree degree = Degree.builder()
-                .name("CS")
-                .build();
-        degree.setId(degreeId);
+    @DisplayName("Should return empty list when no degrees exist")
+    void getAllDegrees_EmptyList() {
+        // Given
+        when(degreeRepository.findAll()).thenReturn(Collections.emptyList());
 
-        when(repository.findById(degreeId)).thenReturn(Optional.of(degree));
+        // When
+        List<Degree> result = degreeService.getAllDegrees();
 
-        // Act
-        Degree result = service.getDegreeById(degreeId);
-
-        // Assert
+        // Then
         assertNotNull(result);
-        assertEquals(degreeId, result.getId());
-        verify(repository, times(1)).findById(degreeId);
+        assertTrue(result.isEmpty());
+        verify(degreeRepository).findAll();
     }
 
     @Test
-    @DisplayName("Get Degree By ID - Should throw ResourceNotFoundException when degree does not exist")
-    void getDegreeById_ShouldThrowResourceNotFoundException_WhenDegreeDoesNotExist() {
-        // Arrange
+    @DisplayName("Should get degree by ID successfully")
+    void getDegreeById_Success() {
+        // Given
         Long degreeId = 1L;
-        when(repository.findById(degreeId)).thenReturn(Optional.empty());
+        when(degreeRepository.findById(degreeId)).thenReturn(Optional.of(testDegree));
 
-        // Act & Assert
-        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
-            service.getDegreeById(degreeId);
-        });
+        // When
+        Degree result = degreeService.getDegreeById(degreeId);
 
-        assertEquals("degree.not_found", exception.getMessage());
-        assertArrayEquals(new Object[] { degreeId }, exception.getArgs());
-        verify(repository, times(1)).findById(degreeId);
+        // Then
+        assertNotNull(result);
+        assertEquals(testDegree.getId(), result.getId());
+        assertEquals(testDegree.getName(), result.getName());
+        assertEquals(testDegree.getDepartment(), result.getDepartment());
+        assertEquals(testDegree.getDurationYears(), result.getDurationYears());
+
+        verify(degreeRepository).findById(degreeId);
     }
+
+    @Test
+    @DisplayName("Should throw ResourceNotFoundException when degree not found by ID")
+    void getDegreeById_NotFound_ThrowsException() {
+        // Given
+        Long nonExistentId = 999L;
+        when(degreeRepository.findById(nonExistentId)).thenReturn(Optional.empty());
+
+        // When & Then
+        ResourceNotFoundException exception = assertThrows(
+                ResourceNotFoundException.class,
+                () -> degreeService.getDegreeById(nonExistentId)
+        );
+        assertEquals("degree.not_found", exception.getMessage());
+        verify(degreeRepository).findById(nonExistentId);
+    }
+
+    @Test
+    @DisplayName("Should handle repository exception during degree creation")
+    void createDegree_RepositoryException_ThrowsException() {
+        // Given
+        Degree newDegree = Degree.builder()
+                .name("Error Degree")
+                .department("No department")
+                .build();
+
+        when(degreeRepository.save(any(Degree.class))).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        RuntimeException exception = assertThrows(
+                RuntimeException.class,
+                () -> degreeService.createDegree(newDegree)
+        );
+        assertEquals("Database error", exception.getMessage());
+        verify(degreeRepository).save(any(Degree.class));
+    }
+
+    @Test
+    @DisplayName("Should handle repository exception during get all degrees")
+    void getAllDegrees_RepositoryException_ThrowsException() {
+        // Given
+        when(degreeRepository.findAll()).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        RuntimeException exception = assertThrows(
+                RuntimeException.class,
+                () -> degreeService.getAllDegrees()
+        );
+        assertEquals("Database error", exception.getMessage());
+        verify(degreeRepository).findAll();
+    }
+
+    @Test
+    @DisplayName("Should handle repository exception during get degree by ID")
+    void getDegreeById_RepositoryException_ThrowsException() {
+        // Given
+        Long degreeId = 1L;
+        when(degreeRepository.findById(degreeId)).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        RuntimeException exception = assertThrows(
+                RuntimeException.class,
+                () -> degreeService.getDegreeById(degreeId)
+        );
+        assertEquals("Database error", exception.getMessage());
+        verify(degreeRepository).findById(degreeId);
+    }
+
+    @Test
+    @DisplayName("Should create degree with null optional fields")
+    void createDegree_WithNullOptionalFields_Success() {
+        // Given
+        Degree degreeWithNulls = Degree.builder()
+                .name("Test Degree")
+                .department(null)
+                .durationYears(4)
+                .build();
+
+        Degree savedDegree = Degree.builder()
+                .name("Test Degree")
+                .department(null)
+                .durationYears(4)
+                .build();
+
+        when(degreeRepository.save(any(Degree.class))).thenReturn(savedDegree);
+
+        // When
+        Degree result = degreeService.createDegree(degreeWithNulls);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(savedDegree.getId(), result.getId());
+        assertEquals(savedDegree.getName(), result.getName());
+        assertEquals(savedDegree.getDepartment(), result.getDepartment());
+        assertEquals(savedDegree.getDurationYears(), result.getDurationYears());
+
+        verify(degreeRepository).save(any(Degree.class));
+    }
+
+
 }
