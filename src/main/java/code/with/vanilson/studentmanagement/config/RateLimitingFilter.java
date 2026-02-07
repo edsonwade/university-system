@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
+@org.springframework.context.annotation.Profile("!test")
 public class RateLimitingFilter extends OncePerRequestFilter {
 
     // In a real production app, this would use Redis to store buckets across

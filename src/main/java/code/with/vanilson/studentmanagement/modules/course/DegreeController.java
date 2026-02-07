@@ -27,4 +27,11 @@ public class DegreeController {
     public ResponseEntity<ApiResponse<List<Degree>>> getAllDegrees() {
         return ResponseEntity.ok(ApiResponse.success(service.getAllDegrees(), "Degrees retrieved successfully"));
     }
+
+    @GetMapping("/{id}")
+    @io.swagger.v3.oas.annotations.Operation(summary = "Get degree by ID", description = "Retrieves a degree by its ID.")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Degree retrieved successfully")
+    public ResponseEntity<ApiResponse<Degree>> getDegreeById(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.success(service.getDegreeById(id), "Degree retrieved successfully"));
+    }
 }

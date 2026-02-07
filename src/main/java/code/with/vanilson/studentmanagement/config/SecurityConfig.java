@@ -19,7 +19,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
-    private final RateLimitingFilter rateLimitingFilter;
+    private final java.util.Optional<RateLimitingFilter> rateLimitingFilter;
     private final AuthenticationProvider authenticationProvider;
 
     @Bean
@@ -33,8 +33,9 @@ public class SecurityConfig {
                         .authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider)
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(rateLimitingFilter, JwtAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+
+        rateLimitingFilter.ifPresent(filter -> http.addFilterBefore(filter, JwtAuthenticationFilter.class));
 
         return http.build();
     }

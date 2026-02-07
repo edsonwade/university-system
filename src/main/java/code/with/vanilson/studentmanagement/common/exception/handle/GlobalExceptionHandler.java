@@ -71,6 +71,24 @@ public class GlobalExceptionHandler {
                                 request);
         }
 
+        @ExceptionHandler(org.springframework.web.bind.MethodArgumentNotValidException.class)
+        public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(
+                        org.springframework.web.bind.MethodArgumentNotValidException ex,
+                        HttpServletRequest request) {
+                String errorMessage = ex.getBindingResult().getFieldErrors().stream()
+                                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                                .collect(java.util.stream.Collectors.joining(", "));
+
+                ErrorResponse errorResponse = new ErrorResponse(
+                                errorMessage,
+                                BAD_REQUEST,
+                                ZONE_LONDON,
+                                getPath(request),
+                                HttpStatus.BAD_REQUEST.value(),
+                                now());
+                return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        }
+
         @ExceptionHandler(InternalServerErrorException.class)
         public ResponseEntity<ErrorResponse> handleInternalServerErrorException(InternalServerErrorException ex,
                         HttpServletRequest request) {
@@ -84,6 +102,45 @@ public class GlobalExceptionHandler {
                 return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
+        @ExceptionHandler(IllegalStateException.class)
+        public ResponseEntity<ErrorResponse> handleIllegalStateException(IllegalStateException ex, HttpServletRequest request) {
+                ErrorResponse errorResponse = new ErrorResponse(
+                                ex.getMessage(),
+                                "CONFLICT",
+                                ZONE_LONDON,
+                                getPath(request),
+                                HttpStatus.CONFLICT.value(),
+                                now());
+                return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+        }
+
+        @ExceptionHandler(org.springframework.security.core.AuthenticationException.class)
+        public ResponseEntity<ErrorResponse> handleAuthenticationException(
+                        org.springframework.security.core.AuthenticationException ex,
+                        HttpServletRequest request) {
+                ErrorResponse errorResponse = new ErrorResponse(
+                                ex.getMessage(),
+                                "UNAUTHORIZED",
+                                ZONE_LONDON,
+                                getPath(request),
+                                HttpStatus.UNAUTHORIZED.value(),
+                                now());
+                return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
+        }
+
+        @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+        public ResponseEntity<ErrorResponse> handleAccessDeniedException(
+                        org.springframework.security.access.AccessDeniedException ex,
+                        HttpServletRequest request) {
+                ErrorResponse errorResponse = new ErrorResponse(
+                                ex.getMessage(),
+                                "FORBIDDEN",
+                                ZONE_LONDON,
+                                getPath(request),
+                                HttpStatus.FORBIDDEN.value(),
+                                now());
+                return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
+        }
         @ExceptionHandler(Exception.class)
         public ResponseEntity<ErrorResponse> handleGlobalException(Exception ex, HttpServletRequest request) {
                 ErrorResponse errorResponse = new ErrorResponse(

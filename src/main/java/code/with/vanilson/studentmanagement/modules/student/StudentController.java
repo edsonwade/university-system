@@ -21,7 +21,8 @@ public class StudentController {
     @io.swagger.v3.oas.annotations.Operation(summary = "Create a new student", description = "Creates a new student record. Requires ADMIN role.")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Student created successfully")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - Requires ADMIN role")
-    public ResponseEntity<ApiResponse<StudentDto>> createStudent(@RequestBody StudentDto dto) {
+    public ResponseEntity<ApiResponse<StudentDto>> createStudent(
+            @jakarta.validation.Valid @RequestBody StudentDto dto) {
         return ResponseEntity.ok(ApiResponse.success(service.createStudent(dto), "Student created successfully"));
     }
 
@@ -46,7 +47,8 @@ public class StudentController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Student updated successfully")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - Requires ADMIN role")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Student not found")
-    public ResponseEntity<ApiResponse<StudentDto>> updateStudent(@PathVariable Long id, @RequestBody StudentDto dto) {
+    public ResponseEntity<ApiResponse<StudentDto>> updateStudent(@PathVariable Long id,
+            @jakarta.validation.Valid @RequestBody StudentDto dto) {
         return ResponseEntity.ok(ApiResponse.success(service.updateStudent(id, dto), "Student updated successfully"));
     }
 

@@ -21,4 +21,10 @@ public class TeacherService {
     public List<Teacher> getAllTeachers() {
         return repository.findAll();
     }
+
+    public Teacher getTeacherById(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new code.with.vanilson.studentmanagement.common.exception.ResourceNotFoundException(
+                        "teacher.not_found", id));
+    }
 }
