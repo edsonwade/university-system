@@ -29,24 +29,17 @@ public abstract class AbstractIntegrationTest {
             .withPassword("postgres")
             .waitingFor(Wait.forListeningPort());
 
+    @ServiceConnection
     @Container
-    static GenericContainer<?> redis =
-            new GenericContainer<>("redis:7-alpine")
-                    .withExposedPorts(6379);
+    static com.redis.testcontainers.RedisContainer redis = new com.redis.testcontainers.RedisContainer(
+            DockerImageName.parse("redis:7-alpine"));
 
     static {
         postgres.start();
         redis.start();
     }
 
-    @DynamicPropertySource
-    static void dynamicProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.redis.host", redis::getHost);
-        registry.add("spring.redis.port", () -> redis.getFirstMappedPort());
-    }
-
     @MockBean
     protected org.springframework.kafka.core.KafkaTemplate<String, String> kafkaTemplate;
-
 
 }

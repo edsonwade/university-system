@@ -30,9 +30,7 @@ spring:
     exclude: 
       - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
 
-  # Disable caching for tests
-  cache:
-    type: none
+
 
 
   mail:
