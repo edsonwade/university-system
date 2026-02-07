@@ -1,16 +1,20 @@
 package code.with.vanilson.studentmanagement.modules.student;
 
 import code.with.vanilson.studentmanagement.AbstractIntegrationTest;
+import code.with.vanilson.studentmanagement.modules.appointment.AppointmentRepository;
+import code.with.vanilson.studentmanagement.modules.billing.InvoiceRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.CacheManager;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
+import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -26,10 +30,22 @@ class StudentIntegrationTest extends AbstractIntegrationTest {
     private StudentRepository studentRepository;
 
     @Autowired
+    private InvoiceRepository invoiceRepository;
+
+    @Autowired
+    private AppointmentRepository appointmentRepository;
+
+    @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private CacheManager cacheManager;
 
     @BeforeEach
     void setUp() {
+        Objects.requireNonNull(cacheManager.getCache("students")).clear();
+        appointmentRepository.deleteAll();
+        invoiceRepository.deleteAll();
         studentRepository.deleteAll();
     }
 
